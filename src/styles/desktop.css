@@ -1,0 +1,59 @@
+/* Glass Panel Effects */
+.glass-panel {
+  background: rgba(20, 20, 20, 0.6);
+  backdrop-filter: blur(40px) saturate(180%) brightness(1.1);
+  -webkit-backdrop-filter: blur(40px) saturate(180%) brightness(1.1);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.2);
+}
+
+.glass-panel-light {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(40px) saturate(180%);
+  -webkit-backdrop-filter: blur(40px) saturate(180%);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
+/* Acrylic Effect (Windows 11 style) */
+.acrylic {
+  background: rgba(30, 30, 30, 0.85);
+  backdrop-filter: blur(64px) saturate(150%) brightness(1.15);
+  -webkit-backdrop-filter: blur(64px) saturate(150%) brightness(1.15);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* Hover Glow Effect */
+.hover-glow {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.hover-glow:hover {
+  box-shadow:
+    0 0 20px rgba(var(--accent-color-rgb), 0.3),
+    0 0 40px rgba(var(--accent-color-rgb), 0.1);
+}
+
+/* Light mode adjustments */
+.light .glass-panel {
+  background: rgba(255, 255, 255, 0.7);
+  border-color: rgba(0, 0, 0, 0.1);
+}
+
+/* Accent color CSS variables */
+:root {
+  --accent-color: #0078d4;
+  --accent-color-rgb: 0, 120, 212;
+}
+
+/* Smooth microinteractions */
+button, [role="button"] {
+  transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1),
+              opacity 0.15s cubic-bezier(0.4, 0, 0.2, 1),
+              background-color 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}

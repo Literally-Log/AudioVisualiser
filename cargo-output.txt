@@ -1,0 +1,3 @@
+    Checking audioviz v1.0.0 (C:\Users\derpy\Desktop\projects\visualiser\src-tauri)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 3.40s
+EXIT_CODE=0 
