@@ -1,6 +1,7 @@
-import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react'
+import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
 import type {
   AppContextType,
+  AudioState,
   BehaviorSettings,
   ColorSettings,
   CustomPreset,
@@ -81,7 +82,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
     transitionProgress: 1,
   })
 
-  const { audio, beat, loadAudioFile, togglePlay, seek, setVolume } = useAudioAnalyser(settings.sensitivity)
+  const { playback, beat, frameDataRef, loadAudioFile, togglePlay, seek, setVolume } = useAudioAnalyser(settings.sensitivity)
+
+  // Map playback to AudioState shape for backward compat with UI components
+  const audio: AudioState = useMemo(() => ({
+    isPlaying: playback.isPlaying,
+    currentTime: playback.currentTime,
+    duration: playback.duration,
+    volume: playback.volume,
+    fileName: playback.fileName,
+  }), [playback])
 
   useEffect(() => {
     saveSettings(settings)
@@ -185,7 +195,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
         createdAt: Date.now(),
       }
       setCustomPresets((prev) => {
-        // Replace existing preset with same name, or add new
         const filtered = prev.filter((p) => p.name !== name)
         return [...filtered, preset]
       })
@@ -204,33 +213,35 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setVisualizationType('bars')
   }, [setVisualizationType])
 
+  // Memoize the context value to prevent unnecessary re-renders
+  const contextValue = useMemo<AppContextType>(() => ({
+    audio,
+    frameDataRef,
+    visualizer,
+    settings,
+    customPresets,
+    setVisualizationType,
+    updateColors,
+    updateSensitivity,
+    updateEffects,
+    updatePerformance,
+    updateBehavior,
+    updateVisualization,
+    updateFrequencyTuning,
+    updatePeakHold,
+    loadPreset,
+    loadCustomPreset,
+    saveCustomPreset,
+    deleteCustomPreset,
+    resetSettings,
+    loadAudioFile,
+    togglePlay,
+    seek,
+    setVolume,
+  }), [audio, frameDataRef, visualizer, settings, customPresets, setVisualizationType, updateColors, updateSensitivity, updateEffects, updatePerformance, updateBehavior, updateVisualization, updateFrequencyTuning, updatePeakHold, loadPreset, loadCustomPreset, saveCustomPreset, deleteCustomPreset, resetSettings, loadAudioFile, togglePlay, seek, setVolume])
+
   return (
-    <AppCtx.Provider
-      value={{
-        audio,
-        visualizer,
-        settings,
-        customPresets,
-        setVisualizationType,
-        updateColors,
-        updateSensitivity,
-        updateEffects,
-        updatePerformance,
-        updateBehavior,
-        updateVisualization,
-        updateFrequencyTuning,
-        updatePeakHold,
-        loadPreset,
-        loadCustomPreset,
-        saveCustomPreset,
-        deleteCustomPreset,
-        resetSettings,
-        loadAudioFile,
-        togglePlay,
-        seek,
-        setVolume,
-      }}
-    >
+    <AppCtx.Provider value={contextValue}>
       {children}
     </AppCtx.Provider>
   )

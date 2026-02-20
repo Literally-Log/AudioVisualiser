@@ -4,7 +4,7 @@ import * as THREE from 'three'
 import { useApp } from '../../context/AppContext.tsx'
 
 export default function Waveform() {
-  const { audio, settings } = useApp()
+  const { frameDataRef, settings } = useApp()
   const groupRef = useRef<THREE.Group>(null)
 
   const pointCount = Math.min(settings.visualization.resolution * 4, 1024)
@@ -40,8 +40,8 @@ export default function Waveform() {
   }, [pointCount, scale])
 
   useFrame(() => {
-    const timeData = audio.timeDomainData
-    const freqData = audio.frequencyData
+    const timeData = frameDataRef.current.timeDomainData
+    const freqData = frameDataRef.current.frequencyData
     if (!timeData) return
 
     const pos = geom.attributes.position as THREE.BufferAttribute

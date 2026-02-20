@@ -4,7 +4,7 @@ import * as THREE from 'three'
 import { useApp } from '../../context/AppContext.tsx'
 
 export default function RadialSpectrum() {
-  const { audio, settings } = useApp()
+  const { frameDataRef, settings } = useApp()
   const groupRef = useRef<THREE.Group>(null)
   const peakGroupRef = useRef<THREE.Group>(null)
 
@@ -14,6 +14,11 @@ export default function RadialSpectrum() {
   const tuning = settings.frequencyTuning
 
   const peaksRef = useRef<{ value: number; time: number }[]>([])
+
+  // Pre-allocate Color objects for lerping — reused every frame
+  const tmpColor1 = useMemo(() => new THREE.Color(), [])
+  const tmpColor2 = useMemo(() => new THREE.Color(), [])
+  const tmpLerp = useMemo(() => new THREE.Color(), [])
 
   const { bars, peakDots } = useMemo(() => {
     const barWidth = Math.max(0.02, (Math.PI * 2 * 1.5) / barCount * 0.7)
@@ -39,7 +44,7 @@ export default function RadialSpectrum() {
 
   useFrame((state) => {
     const t = state.clock.elapsedTime
-    const data = audio.frequencyData
+    const data = frameDataRef.current.frequencyData
     const group = groupRef.current
     if (!data || !group) return
 
@@ -47,6 +52,10 @@ export default function RadialSpectrum() {
 
     const step = Math.floor(data.length / barCount)
     const peaks = peaksRef.current
+
+    // Set tmp colors once per frame
+    tmpColor1.set(settings.colors.primary)
+    tmpColor2.set(settings.colors.secondary)
 
     group.children.forEach((child, i) => {
       const mesh = child as THREE.Mesh
@@ -72,8 +81,9 @@ export default function RadialSpectrum() {
       mesh.position.y = Math.sin(bar.angle) * (radius + height * 0.5)
       mesh.rotation.z = bar.angle - Math.PI / 2
 
-      const color = new THREE.Color(settings.colors.primary).lerp(new THREE.Color(settings.colors.secondary), val)
-      bar.mat.color = color
+      // Reuse pre-allocated color
+      tmpLerp.copy(tmpColor1).lerp(tmpColor2, val)
+      bar.mat.color.copy(tmpLerp)
 
       // Peak hold
       if (peakHold.enabled && peaks[i]) {

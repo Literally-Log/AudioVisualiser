@@ -7,7 +7,7 @@ import particleVertShader from '../../shaders/particle.vert.glsl'
 import particleFragShader from '../../shaders/particle.frag.glsl'
 
 export default function ParticleSystem() {
-  const { audio, settings } = useApp()
+  const { frameDataRef, settings } = useApp()
   const pointsRef = useRef<THREE.Points>(null)
 
   const count = settings.effects.particleDensity
@@ -63,11 +63,11 @@ export default function ParticleSystem() {
 
   useFrame((state) => {
     const t = state.clock.elapsedTime
-    const data = audio.frequencyData
+    const data = frameDataRef.current.frequencyData
     if (!data) return
 
     material.uniforms.uTime.value = t
-    material.uniforms.uBass.value = audio.frequencyBands.bass
+    material.uniforms.uBass.value = frameDataRef.current.frequencyBands.bass
     material.uniforms.uColor1.value.set(settings.colors.primary)
     material.uniforms.uColor2.value.set(settings.colors.secondary)
     material.uniforms.uAccent.value.set(settings.colors.accent)

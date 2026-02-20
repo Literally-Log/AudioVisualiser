@@ -116,9 +116,6 @@ export interface AudioState {
   duration: number
   volume: number
   fileName: string | null
-  frequencyData: Uint8Array | null
-  timeDomainData: Uint8Array | null
-  frequencyBands: FrequencyBands
 }
 
 export interface VisualizerState {
@@ -139,8 +136,15 @@ export interface Settings {
   activePreset: string | null
 }
 
+export interface AudioFrameData {
+  frequencyData: Uint8Array | null
+  timeDomainData: Uint8Array | null
+  frequencyBands: FrequencyBands
+}
+
 export interface AppContextType {
   audio: AudioState
+  frameDataRef: React.RefObject<AudioFrameData>
   visualizer: VisualizerState
   settings: Settings
   customPresets: CustomPreset[]

@@ -7,7 +7,7 @@ import barVertShader from '../../shaders/bar.vert.glsl'
 import barFragShader from '../../shaders/bar.frag.glsl'
 
 export default function FrequencyBars() {
-  const { audio, settings } = useApp()
+  const { frameDataRef, settings } = useApp()
   const groupRef = useRef<THREE.Group>(null)
   const peakGroupRef = useRef<THREE.Group>(null)
 
@@ -27,6 +27,7 @@ export default function FrequencyBars() {
     const spread = 8 * scale
     const barWidth = Math.max(0.02, (spread / barCount) * 0.85)
     const barGeom = new THREE.BoxGeometry(barWidth, 1, barWidth)
+    const peakGeom = new THREE.BoxGeometry(barWidth * 1.1, 0.06, barWidth * 1.1)
 
     for (let i = 0; i < barCount; i++) {
       const x = (i / barCount - 0.5) * spread
@@ -44,8 +45,6 @@ export default function FrequencyBars() {
       mats.push(mat)
       meshesList.push({ geom: barGeom, pos: [x, 0.5, 0] })
 
-      // Peak hold marker
-      const peakGeom = new THREE.BoxGeometry(barWidth * 1.1, 0.06, barWidth * 1.1)
       const peakMat = new THREE.MeshBasicMaterial({ color: '#ffffff', transparent: true, opacity: 0.9 })
       pMats.push(peakMat)
       pMeshes.push({ geom: peakGeom, pos: [x, 0, 0] })
@@ -58,7 +57,7 @@ export default function FrequencyBars() {
 
   useFrame((state) => {
     const t = state.clock.elapsedTime
-    const data = audio.frequencyData
+    const data = frameDataRef.current.frequencyData
     if (!data || !materials.length) return
 
     const step = Math.floor(data.length / barCount)

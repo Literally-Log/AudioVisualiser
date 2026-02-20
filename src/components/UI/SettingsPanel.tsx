@@ -13,7 +13,7 @@ const vizTypes: { type: VisualizationType; label: string; icon: string }[] = [
   { type: 'bars', label: 'Bars', icon: '|||' },
   { type: 'radial', label: 'Radial', icon: '()' },
   { type: 'waveform', label: 'Wave', icon: '~' },
-  { type: 'particles', label: 'Particles', icon: '...' },
+ // { type: 'particles', label: 'Particles', icon: '...' },
   { type: 'sphere', label: 'Sphere', icon: 'O' },
   { type: 'tunnel', label: 'Tunnel', icon: '>' },
   { type: 'shader', label: 'Shader', icon: '#' },

@@ -14,7 +14,7 @@ void main() {
 `
 
 export default function ShaderViz() {
-  const { audio, settings } = useApp()
+  const { frameDataRef, settings } = useApp()
   const meshRef = useRef<THREE.Mesh>(null)
   const { size } = useThree()
 
@@ -36,10 +36,11 @@ export default function ShaderViz() {
   }, []) // eslint-disable-line
 
   useFrame((state) => {
+    const bands = frameDataRef.current.frequencyBands
     material.uniforms.uTime.value = state.clock.elapsedTime
-    material.uniforms.uBass.value = audio.frequencyBands.bass + audio.frequencyBands.subBass
-    material.uniforms.uMid.value = audio.frequencyBands.mid + audio.frequencyBands.lowMid
-    material.uniforms.uTreble.value = audio.frequencyBands.treble + audio.frequencyBands.highMid
+    material.uniforms.uBass.value = bands.bass + bands.subBass
+    material.uniforms.uMid.value = bands.mid + bands.lowMid
+    material.uniforms.uTreble.value = bands.treble + bands.highMid
     material.uniforms.uColor1.value.set(settings.colors.primary)
     material.uniforms.uColor2.value.set(settings.colors.secondary)
     material.uniforms.uAccent.value.set(settings.colors.accent)

@@ -71,13 +71,6 @@ export const presets: Preset[] = [
     effects: { ...defaultEffects, bloomEnabled: true, bloomIntensity: 1.0, filmGrain: true },
   },
   {
-    name: 'Fire',
-    vizType: 'particles',
-    colors: { primary: '#ff4400', secondary: '#ffaa00', accent: '#ff0000', background: '#0d0000' },
-    sensitivity: { ...defaultSensitivity, bassBoost: 1.6, overall: 1.3 },
-    effects: { ...defaultEffects, bloomEnabled: true, bloomIntensity: 2.5, particleDensity: 5000 },
-  },
-  {
     name: 'Ocean',
     vizType: 'sphere',
     colors: { primary: '#0088ff', secondary: '#00ddcc', accent: '#00ffaa', background: '#000d1a' },

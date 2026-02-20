@@ -4,12 +4,16 @@ import * as THREE from 'three'
 import { useApp } from '../../context/AppContext.tsx'
 
 export default function Tunnel() {
-  const { audio, settings } = useApp()
+  const { frameDataRef, settings } = useApp()
   const groupRef = useRef<THREE.Group>(null)
 
   const ringCount = 30
   const segmentCount = settings.visualization.resolution / 2 || 32
   const scale = settings.visualization.scale
+
+  // Pre-allocate Color objects — reused every frame
+  const tmpColor1 = useMemo(() => new THREE.Color(), [])
+  const tmpColor2 = useMemo(() => new THREE.Color(), [])
 
   const rings = useMemo(() => {
     const items: { lineObj: THREE.Line; mat: THREE.LineBasicMaterial; z: number }[] = []
@@ -36,8 +40,12 @@ export default function Tunnel() {
 
   useFrame((state) => {
     const t = state.clock.elapsedTime
-    const data = audio.frequencyData
+    const data = frameDataRef.current.frequencyData
     if (!data) return
+
+    // Set tmp colors once per frame, not per ring
+    tmpColor1.set(settings.colors.primary)
+    tmpColor2.set(settings.colors.secondary)
 
     rings.forEach((ring, i) => {
       const pos = ring.lineObj.geometry.attributes.position as THREE.BufferAttribute
@@ -58,11 +66,7 @@ export default function Tunnel() {
 
       const distFactor = 1 - Math.abs(z) / (ringCount * 2)
       ring.mat.opacity = distFactor * 0.8
-      ring.mat.color.lerpColors(
-        new THREE.Color(settings.colors.primary),
-        new THREE.Color(settings.colors.secondary),
-        distFactor,
-      )
+      ring.mat.color.lerpColors(tmpColor1, tmpColor2, distFactor)
     })
   })
 

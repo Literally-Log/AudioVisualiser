@@ -4,13 +4,14 @@ import * as THREE from 'three'
 import { useApp } from '../../context/AppContext.tsx'
 
 export default function SphereMorph() {
-  const { audio, settings } = useApp()
+  const { frameDataRef, settings } = useApp()
   const meshRef = useRef<THREE.Mesh>(null)
 
   const scale = settings.visualization.scale
 
   const { geometry, material, originalPositions } = useMemo(() => {
-    const geom = new THREE.SphereGeometry(2 * scale, 64, 64)
+    // Reduced from 64x64 (8192 verts) to 32x32 (2048 verts) — 4x less work per frame
+    const geom = new THREE.SphereGeometry(2 * scale, 32, 32)
     const origPos = new Float32Array(geom.attributes.position.array)
 
     const mat = new THREE.MeshPhongMaterial({
@@ -23,11 +24,11 @@ export default function SphereMorph() {
     })
 
     return { geometry: geom, material: mat, originalPositions: origPos }
-  }, [scale]) // eslint-disable-line
+  }, [scale])
 
   useFrame((state) => {
     const t = state.clock.elapsedTime
-    const data = audio.frequencyData
+    const data = frameDataRef.current.frequencyData
     const mesh = meshRef.current
     if (!data || !mesh) return
 
@@ -37,32 +38,35 @@ export default function SphereMorph() {
     const pos = geometry.attributes.position as THREE.BufferAttribute
     const vertCount = pos.count
     const step = Math.max(1, Math.floor(data.length / vertCount))
+    const invScale2 = 1 / (2 * scale)
 
     for (let i = 0; i < vertCount; i++) {
-      const ox = originalPositions[i * 3]
-      const oy = originalPositions[i * 3 + 1]
-      const oz = originalPositions[i * 3 + 2]
+      const i3 = i * 3
+      const ox = originalPositions[i3]
+      const oy = originalPositions[i3 + 1]
+      const oz = originalPositions[i3 + 2]
 
       const idx = (i * step) % data.length
       const freq = (data[idx] / 255) * settings.sensitivity.overall
       const displacement = freq * 0.8 * scale
 
-      const nx = ox / (2 * scale)
-      const ny = oy / (2 * scale)
-      const nz = oz / (2 * scale)
+      const nx = ox * invScale2
+      const ny = oy * invScale2
+      const nz = oz * invScale2
       const len = Math.sqrt(nx * nx + ny * ny + nz * nz) || 1
+      const invLen = 1 / len
 
-      pos.array[i * 3] = ox + (nx / len) * displacement + Math.sin(t * 2 + i * 0.1) * freq * 0.1
-      pos.array[i * 3 + 1] = oy + (ny / len) * displacement + Math.cos(t * 1.5 + i * 0.1) * freq * 0.1
-      pos.array[i * 3 + 2] = oz + (nz / len) * displacement
+      pos.array[i3] = ox + nx * invLen * displacement + Math.sin(t * 2 + i * 0.1) * freq * 0.1
+      pos.array[i3 + 1] = oy + ny * invLen * displacement + Math.cos(t * 1.5 + i * 0.1) * freq * 0.1
+      pos.array[i3 + 2] = oz + nz * invLen * displacement
     }
 
     pos.needsUpdate = true
-    geometry.computeVertexNormals()
+    // Removed computeVertexNormals() — wireframe doesn't need normals, saves massive CPU
 
     material.color.set(settings.colors.primary)
     material.emissive.set(settings.colors.secondary)
-    material.emissiveIntensity = 0.2 + audio.frequencyBands.bass * 0.5
+    material.emissiveIntensity = 0.2 + frameDataRef.current.frequencyBands.bass * 0.5
   })
 
   return (
