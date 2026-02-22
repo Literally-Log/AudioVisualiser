@@ -21,6 +21,8 @@ export const defaultEffects = {
   vignetteIntensity: 0.5,
   rotationSpeed: 0,
   cameraMode: 'static' as const,
+  cameraAzimuth: 0,
+  cameraPolar: 90,
   particleDensity: 3000,
   trailLength: 0,
 }
@@ -28,6 +30,7 @@ export const defaultEffects = {
 export const defaultVisualization: VisualizationSettings = {
   resolution: 64,
   scale: 1.0,
+  heightMultiplier: 3,
   mirror: 'none',
 }
 

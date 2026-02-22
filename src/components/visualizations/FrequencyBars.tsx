@@ -12,7 +12,13 @@ export default function FrequencyBars() {
   const peakGroupRef = useRef<THREE.Group>(null)
 
   const barCount = settings.visualization.resolution
-  const scale = settings.visualization.scale
+  const scale = Number.isFinite(settings.visualization.scale) && settings.visualization.scale > 0
+    ? settings.visualization.scale
+    : 1
+  const heightMultiplier =
+    Number.isFinite(settings.visualization.heightMultiplier) && settings.visualization.heightMultiplier > 0
+      ? settings.visualization.heightMultiplier
+      : 3
   const peakHold = settings.peakHold
   const tuning = settings.frequencyTuning
 
@@ -60,7 +66,7 @@ export default function FrequencyBars() {
     const data = frameDataRef.current.frequencyData
     if (!data || !materials.length) return
 
-    const step = Math.floor(data.length / barCount)
+    const step = Math.max(1, Math.floor(data.length / barCount))
     const peaks = peaksRef.current
 
     for (let i = 0; i < barCount; i++) {
@@ -71,13 +77,25 @@ export default function FrequencyBars() {
       else if (freqRatio < 0.5) gain = tuning.midGain / 100
       else gain = tuning.trebleGain / 100
 
-      const rawVal = data[i * step] / 255
+      const start = i * step
+      const end = Math.min(start + step, data.length)
+      let sum = 0
+      let count = 0
+      for (let j = start; j < end; j++) {
+        sum += data[j]
+        count++
+      }
+      const rawVal = count > 0 ? (sum / count) / 255 : 0
       const val = Math.min(1, rawVal * settings.sensitivity.overall * gain)
 
       const mat = materials[i]
       const smoothness = tuning.smoothness / 100
       const lerpFactor = 0.1 + (1 - smoothness) * 0.5
-      mat.uniforms.uFrequency.value = THREE.MathUtils.lerp(mat.uniforms.uFrequency.value, val * scale * 3, lerpFactor)
+      mat.uniforms.uFrequency.value = THREE.MathUtils.lerp(
+        mat.uniforms.uFrequency.value,
+        val * scale * heightMultiplier,
+        lerpFactor,
+      )
       mat.uniforms.uTime.value = t
       mat.uniforms.uColor1.value.set(settings.colors.primary)
       mat.uniforms.uColor2.value.set(settings.colors.secondary)

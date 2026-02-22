@@ -1,8 +1,10 @@
-import { Suspense, lazy } from 'react'
-import { Canvas } from '@react-three/fiber'
+import { Suspense, lazy, useRef, useEffect } from 'react'
+import { Canvas, useThree } from '@react-three/fiber'
 import { OrbitControls } from '@react-three/drei'
 import { useApp } from '../context/AppContext.tsx'
 import PostProcessingEffects from './PostProcessing.tsx'
+import * as THREE from 'three'
+import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib'
 
 const FrequencyBars = lazy(() => import('./visualizations/FrequencyBars.tsx'))
 const RadialSpectrum = lazy(() => import('./visualizations/RadialSpectrum.tsx'))
@@ -93,9 +95,49 @@ function MirrorScene() {
   )
 }
 
+function CameraController() {
+  const { settings } = useApp()
+  const controlsRef = useRef<OrbitControlsImpl>(null)
+  const { camera } = useThree()
+  const isOrbit = settings.effects.cameraMode === 'orbit'
+  const azimuth = settings.effects.cameraAzimuth
+  const polar = settings.effects.cameraPolar
+
+  // Apply camera angles from settings
+  useEffect(() => {
+    if (!controlsRef.current) {
+      // No OrbitControls — position camera directly from spherical coords
+      const radius = 6
+      const phi = THREE.MathUtils.degToRad(polar)
+      const theta = THREE.MathUtils.degToRad(azimuth)
+      camera.position.set(
+        radius * Math.sin(phi) * Math.sin(theta),
+        radius * Math.cos(phi),
+        radius * Math.sin(phi) * Math.cos(theta),
+      )
+      camera.lookAt(0, 0, 0)
+      return
+    }
+    // With OrbitControls, set azimuth and polar angles
+    controlsRef.current.setAzimuthalAngle(THREE.MathUtils.degToRad(azimuth))
+    controlsRef.current.setPolarAngle(THREE.MathUtils.degToRad(polar))
+    controlsRef.current.update()
+  }, [azimuth, polar, camera])
+
+  if (!isOrbit) return null
+
+  return (
+    <OrbitControls
+      ref={controlsRef}
+      enableZoom={false}
+      autoRotate
+      autoRotateSpeed={1}
+    />
+  )
+}
+
 export default function VisualizerCanvas() {
   const { settings, canvasRef } = useApp()
-  const isOrbit = settings.effects.cameraMode === 'orbit'
 
   return (
     <Canvas
@@ -112,7 +154,7 @@ export default function VisualizerCanvas() {
         <MirrorScene />
         <PostProcessingEffects />
       </Suspense>
-      {isOrbit && <OrbitControls enableZoom={false} autoRotate autoRotateSpeed={1} />}
+      <CameraController />
     </Canvas>
   )
 }

@@ -60,8 +60,8 @@ export function useRecorder(
     const audioCtx = audioContextRef.current
     const gain = gainRef.current
 
-    if (!canvas || !audioCtx || !gain) {
-      setRecording((prev) => ({ ...prev, status: 'error', error: 'Load and play a track first.' }))
+    if (!canvas) {
+      setRecording((prev) => ({ ...prev, status: 'error', error: 'Canvas not ready yet.' }))
       return
     }
 
@@ -74,16 +74,16 @@ export function useRecorder(
     // Video stream from canvas at 60fps
     const canvasStream = canvas.captureStream(60)
 
-    // Audio tap — connect gain node to a MediaStreamDestination in parallel
-    const audioDest = audioCtx.createMediaStreamDestination()
-    gain.connect(audioDest)
-    audioDestRef.current = audioDest
+    // Audio tap — connect gain node to a MediaStreamDestination in parallel (if audio is ready)
+    const tracks = [...canvasStream.getVideoTracks()]
+    if (audioCtx && gain) {
+      const audioDest = audioCtx.createMediaStreamDestination()
+      gain.connect(audioDest)
+      audioDestRef.current = audioDest
+      tracks.push(...audioDest.stream.getAudioTracks())
+    }
 
-    // Combine video + audio tracks
-    const combinedStream = new MediaStream([
-      ...canvasStream.getVideoTracks(),
-      ...audioDest.stream.getAudioTracks(),
-    ])
+    const combinedStream = new MediaStream(tracks)
 
     const recorder = new MediaRecorder(combinedStream, {
       mimeType: format.mimeType,
@@ -98,8 +98,10 @@ export function useRecorder(
     }
 
     recorder.onstop = () => {
-      // Disconnect the audio tap
-      try { gain.disconnect(audioDest) } catch {}
+      // Disconnect the audio tap if it was connected
+      if (audioDestRef.current && gain) {
+        try { gain.disconnect(audioDestRef.current) } catch {}
+      }
       audioDestRef.current = null
 
       const blob = new Blob(chunksRef.current, { type: format.mimeType })

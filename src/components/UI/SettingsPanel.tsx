@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useApp } from '../../context/AppContext.tsx'
 import PresetSelector from './PresetSelector.tsx'
@@ -117,6 +117,67 @@ function Select<T extends string>({
   )
 }
 
+function NumberInput({
+  label,
+  value,
+  min,
+  max,
+  step,
+  onChange,
+  unit,
+}: {
+  label: string
+  value: number
+  min?: number
+  max?: number
+  step?: number
+  onChange: (v: number) => void
+  unit?: string
+}) {
+  const [text, setText] = useState(String(value))
+  const [focused, setFocused] = useState(false)
+
+  useEffect(() => {
+    if (!focused) setText(String(value))
+  }, [focused, value])
+
+  const commit = (raw: string) => {
+    const num = parseFloat(raw)
+    if (isNaN(num)) {
+      setText(String(value))
+      return
+    }
+    const clamped = Math.min(max ?? Infinity, Math.max(min ?? -Infinity, num))
+    onChange(clamped)
+    setText(String(clamped))
+  }
+
+  return (
+    <div className="flex items-center gap-3">
+      <span className="text-white/50 text-xs w-24 shrink-0">{label}</span>
+      <input
+        type="text"
+        inputMode="decimal"
+        value={focused ? text : String(value)}
+        onFocus={() => { setFocused(true); setText(String(value)) }}
+        onBlur={() => { setFocused(false); commit(text) }}
+        onChange={(e) => {
+          // Allow only numbers, dots, minus
+          const filtered = e.target.value.replace(/[^0-9.\-]/g, '')
+          setText(filtered)
+        }}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') commit(text)
+          if (e.key === 'ArrowUp') { e.preventDefault(); onChange(Math.min(max ?? Infinity, value + (step || 0.1))) }
+          if (e.key === 'ArrowDown') { e.preventDefault(); onChange(Math.max(min ?? -Infinity, value - (step || 0.1))) }
+        }}
+        className="flex-1 bg-white/10 text-white/80 text-xs px-2 py-1.5 rounded-lg border border-white/10 outline-none focus:border-white/30 font-mono text-right w-20"
+      />
+      {unit && <span className="text-white/40 text-xs w-4">{unit}</span>}
+    </div>
+  )
+}
+
 function SectionHeader({ title }: { title: string }) {
   return <h3 className="text-white/60 text-xs uppercase tracking-wider mb-3">{title}</h3>
 }
@@ -219,6 +280,16 @@ export default function SettingsPanel({ isOpen }: Props) {
                   unit="x"
                 />
 
+                <NumberInput
+                  label="Height"
+                  value={settings.visualization.heightMultiplier}
+                  min={0.1}
+                  max={20}
+                  step={0.1}
+                  onChange={(v) => updateVisualization({ heightMultiplier: v })}
+                  unit="x"
+                />
+
                 <Select
                   label="Mirror"
                   value={settings.visualization.mirror}
@@ -316,6 +387,14 @@ export default function SettingsPanel({ isOpen }: Props) {
                   ]}
                   onChange={(v) => updateEffects({ cameraMode: v as CameraMode })}
                 />
+                <Slider label="Cam Azimuth" value={settings.effects.cameraAzimuth} min={-180} max={180} step={1} onChange={(v) => updateEffects({ cameraAzimuth: v })} unit="°" />
+                <Slider label="Cam Polar" value={settings.effects.cameraPolar} min={1} max={179} step={1} onChange={(v) => updateEffects({ cameraPolar: v })} unit="°" />
+                <button
+                  onClick={() => updateEffects({ cameraAzimuth: 0, cameraPolar: 90 })}
+                  className="w-full py-1.5 rounded-lg text-xs text-white/40 bg-white/5 border border-white/10 hover:bg-white/10 hover:text-white/60 transition-all"
+                >
+                  Reset Camera Position
+                </button>
               </div>
             </div>
 
@@ -336,12 +415,7 @@ export default function SettingsPanel({ isOpen }: Props) {
                 {recording.status === 'idle' ? (
                   <button
                     onClick={startRecording}
-                    disabled={!audio.isPlaying}
-                    className={`w-full py-2.5 rounded-lg text-xs font-medium transition-all flex items-center justify-center gap-2 ${
-                      audio.isPlaying
-                        ? 'bg-red-500/20 text-red-300 border border-red-500/30 hover:bg-red-500/30'
-                        : 'bg-white/5 text-white/20 border border-white/10 cursor-not-allowed'
-                    }`}
+                    className="w-full py-2.5 rounded-lg text-xs font-medium transition-all flex items-center justify-center gap-2 bg-red-500/20 text-red-300 border border-red-500/30 hover:bg-red-500/30"
                   >
                     <span className="w-2.5 h-2.5 rounded-full bg-current" />
                     Start Recording
@@ -367,8 +441,8 @@ export default function SettingsPanel({ isOpen }: Props) {
                   <p className="text-red-400/80 text-xs">{recording.error}</p>
                 )}
 
-                {recording.status === 'idle' && !audio.isPlaying && audio.fileName && (
-                  <p className="text-white/30 text-xs">Play audio first to enable recording</p>
+                {recording.status === 'idle' && (
+                  <p className="text-white/30 text-xs">Start recording before or during playback</p>
                 )}
               </div>
             </div>

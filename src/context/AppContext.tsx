@@ -35,18 +35,65 @@ const defaultSettings: Settings = {
   activePreset: 'Cyberpunk',
 }
 
+function clampNumber(value: unknown, min: number, max: number, fallback: number): number {
+  if (typeof value !== 'number' || !Number.isFinite(value)) return fallback
+  return Math.min(max, Math.max(min, value))
+}
+
+function sanitizeSettings(input: Settings): Settings {
+  const validResolutions = [8, 16, 32, 64, 128, 256, 512] as const
+  const resolution = validResolutions.includes(input.visualization.resolution)
+    ? input.visualization.resolution
+    : defaultVisualization.resolution
+
+  return {
+    ...input,
+    sensitivity: {
+      ...input.sensitivity,
+      overall: clampNumber(input.sensitivity.overall, 0.1, 3, defaultSensitivity.overall),
+      smoothing: clampNumber(input.sensitivity.smoothing, 0, 0.95, defaultSensitivity.smoothing),
+    },
+    effects: {
+      ...input.effects,
+      cameraAzimuth: clampNumber(input.effects.cameraAzimuth, -180, 180, defaultEffects.cameraAzimuth),
+      cameraPolar: clampNumber(input.effects.cameraPolar, 1, 179, defaultEffects.cameraPolar),
+    },
+    visualization: {
+      ...input.visualization,
+      resolution,
+      scale: clampNumber(input.visualization.scale, 0.1, 3, defaultVisualization.scale),
+      heightMultiplier: clampNumber(input.visualization.heightMultiplier, 0.1, 20, defaultVisualization.heightMultiplier),
+    },
+    frequencyTuning: {
+      ...input.frequencyTuning,
+      subBassGain: clampNumber(input.frequencyTuning.subBassGain, 0, 200, defaultFrequencyTuning.subBassGain),
+      bassGain: clampNumber(input.frequencyTuning.bassGain, 0, 200, defaultFrequencyTuning.bassGain),
+      midGain: clampNumber(input.frequencyTuning.midGain, 0, 200, defaultFrequencyTuning.midGain),
+      trebleGain: clampNumber(input.frequencyTuning.trebleGain, 0, 200, defaultFrequencyTuning.trebleGain),
+      smoothness: clampNumber(input.frequencyTuning.smoothness, 0, 100, defaultFrequencyTuning.smoothness),
+    },
+    peakHold: {
+      ...input.peakHold,
+      falloffTime: clampNumber(input.peakHold.falloffTime, 0.1, 5, defaultPeakHold.falloffTime),
+      scaleX: clampNumber(input.peakHold.scaleX, 0.1, 3, defaultPeakHold.scaleX),
+      scaleY: clampNumber(input.peakHold.scaleY, 0.1, 3, defaultPeakHold.scaleY),
+    },
+  }
+}
+
 function loadSettings(): Settings {
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
     if (raw) {
       const parsed = JSON.parse(raw)
-      return {
+      const merged: Settings = {
         ...defaultSettings,
         ...parsed,
         visualization: { ...defaultVisualization, ...parsed.visualization },
         frequencyTuning: { ...defaultFrequencyTuning, ...parsed.frequencyTuning },
         peakHold: { ...defaultPeakHold, ...parsed.peakHold },
       }
+      return sanitizeSettings(merged)
     }
   } catch {}
   return defaultSettings

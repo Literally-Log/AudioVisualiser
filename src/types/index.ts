@@ -62,6 +62,7 @@ export interface PeakHoldSettings {
 export interface VisualizationSettings {
   resolution: Resolution
   scale: number         // 0.1-3
+  heightMultiplier: number  // 0.1-20
   mirror: MirrorMode
 }
 
@@ -77,6 +78,8 @@ export interface EffectSettings {
   vignetteIntensity: number
   rotationSpeed: number
   cameraMode: CameraMode
+  cameraAzimuth: number     // degrees -180 to 180
+  cameraPolar: number       // degrees 0 to 180
   particleDensity: number
   trailLength: number
 }
