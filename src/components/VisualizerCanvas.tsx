@@ -94,15 +94,18 @@ function MirrorScene() {
 }
 
 export default function VisualizerCanvas() {
-  const { settings } = useApp()
+  const { settings, canvasRef } = useApp()
   const isOrbit = settings.effects.cameraMode === 'orbit'
 
   return (
     <Canvas
       camera={{ position: [0, 0, 6], fov: 60 }}
       style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}
-      gl={{ antialias: settings.performance.antialiasing, alpha: true }}
+      gl={{ antialias: settings.performance.antialiasing, alpha: true, preserveDrawingBuffer: true }}
       dpr={settings.performance.quality === 'low' ? 1 : settings.performance.quality === 'ultra' ? 2 : 1.5}
+      onCreated={(state) => {
+        canvasRef.current = state.gl.domElement
+      }}
     >
       <color attach="background" args={[settings.colors.background]} />
       <Suspense fallback={null}>

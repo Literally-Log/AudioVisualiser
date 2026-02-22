@@ -136,6 +136,15 @@ export interface Settings {
   activePreset: string | null
 }
 
+export type RecordingStatus = 'idle' | 'recording' | 'stopping' | 'error'
+
+export interface RecordingState {
+  status: RecordingStatus
+  duration: number
+  format: string | null
+  error: string | null
+}
+
 export interface AudioFrameData {
   frequencyData: Uint8Array | null
   timeDomainData: Uint8Array | null
@@ -145,6 +154,8 @@ export interface AudioFrameData {
 export interface AppContextType {
   audio: AudioState
   frameDataRef: React.RefObject<AudioFrameData>
+  recording: RecordingState
+  canvasRef: React.MutableRefObject<HTMLCanvasElement | null>
   visualizer: VisualizerState
   settings: Settings
   customPresets: CustomPreset[]
@@ -162,6 +173,8 @@ export interface AppContextType {
   saveCustomPreset: (name: string) => void
   deleteCustomPreset: (name: string) => void
   resetSettings: () => void
+  startRecording: () => void
+  stopRecording: () => void
   loadAudioFile: (file: File) => void
   togglePlay: () => void
   seek: (time: number) => void

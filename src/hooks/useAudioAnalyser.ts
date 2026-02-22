@@ -238,5 +238,5 @@ export function useAudioAnalyser(sensitivity: SensitivitySettings) {
     }
   }, [])
 
-  return { playback, beat, frameDataRef, loadAudioFile, togglePlay, seek, setVolume }
+  return { playback, beat, frameDataRef, audioContextRef, gainRef, loadAudioFile, togglePlay, seek, setVolume }
 }

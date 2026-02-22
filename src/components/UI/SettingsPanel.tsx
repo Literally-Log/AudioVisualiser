@@ -121,10 +121,18 @@ function SectionHeader({ title }: { title: string }) {
   return <h3 className="text-white/60 text-xs uppercase tracking-wider mb-3">{title}</h3>
 }
 
+function formatDuration(seconds: number): string {
+  const m = Math.floor(seconds / 60)
+  const s = Math.floor(seconds % 60)
+  return `${m}:${s.toString().padStart(2, '0')}`
+}
+
 export default function SettingsPanel({ isOpen }: Props) {
   const {
+    audio,
     visualizer,
     settings,
+    recording,
     setVisualizationType,
     updateColors,
     updateSensitivity,
@@ -134,6 +142,8 @@ export default function SettingsPanel({ isOpen }: Props) {
     updateFrequencyTuning,
     updatePeakHold,
     resetSettings,
+    startRecording,
+    stopRecording,
   } = useApp()
   const [confirmReset, setConfirmReset] = useState(false)
 
@@ -316,6 +326,50 @@ export default function SettingsPanel({ isOpen }: Props) {
                 <Toggle label="Beat Flash" value={settings.behavior.beatFlash} onChange={(v) => updateBehavior({ beatFlash: v })} />
                 <Toggle label="Idle Animation" value={settings.behavior.idleAnimation} onChange={(v) => updateBehavior({ idleAnimation: v })} />
                 <Slider label="Hide UI (sec)" value={settings.behavior.hideUITimeout} min={0} max={30} step={1} onChange={(v) => updateBehavior({ hideUITimeout: v })} />
+              </div>
+            </div>
+
+            {/* Recording */}
+            <div>
+              <SectionHeader title="Recording" />
+              <div className="space-y-2.5">
+                {recording.status === 'idle' ? (
+                  <button
+                    onClick={startRecording}
+                    disabled={!audio.isPlaying}
+                    className={`w-full py-2.5 rounded-lg text-xs font-medium transition-all flex items-center justify-center gap-2 ${
+                      audio.isPlaying
+                        ? 'bg-red-500/20 text-red-300 border border-red-500/30 hover:bg-red-500/30'
+                        : 'bg-white/5 text-white/20 border border-white/10 cursor-not-allowed'
+                    }`}
+                  >
+                    <span className="w-2.5 h-2.5 rounded-full bg-current" />
+                    Start Recording
+                  </button>
+                ) : recording.status === 'recording' ? (
+                  <div className="space-y-2">
+                    <button
+                      onClick={stopRecording}
+                      className="w-full py-2.5 rounded-lg text-xs font-medium bg-red-500/30 text-red-200 border border-red-500/40 hover:bg-red-500/40 transition-all flex items-center justify-center gap-2"
+                    >
+                      <span className="w-2.5 h-2.5 rounded-full bg-red-400 animate-pulse" />
+                      Stop Recording ({formatDuration(recording.duration)})
+                    </button>
+                    <p className="text-white/30 text-xs text-center">
+                      {recording.format?.includes('mp4') ? 'MP4' : 'WebM'} at 60fps
+                    </p>
+                  </div>
+                ) : recording.status === 'stopping' ? (
+                  <p className="text-white/40 text-xs text-center py-2">Processing recording...</p>
+                ) : null}
+
+                {recording.error && (
+                  <p className="text-red-400/80 text-xs">{recording.error}</p>
+                )}
+
+                {recording.status === 'idle' && !audio.isPlaying && audio.fileName && (
+                  <p className="text-white/30 text-xs">Play audio first to enable recording</p>
+                )}
               </div>
             </div>
 

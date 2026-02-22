@@ -1,4 +1,4 @@
-import{r as g,a as U,j as p}from"./r3f-CAPphJur.js";import{u as B}from"./index-Davg_Qsd.js";import{a2 as k,z,e as w,a3 as E,a4 as C}from"./three-DPks-rhs.js";import"./postprocessing-CdYowpSz.js";const H=`uniform float uFrequency;
+import{r as g,a as U,j as p}from"./r3f-CAPphJur.js";import{u as B}from"./index-C_JvfRo6.js";import{a2 as k,z,e as w,a3 as E,a4 as C}from"./three-DPks-rhs.js";import"./postprocessing-CdYowpSz.js";const H=`uniform float uFrequency;
 uniform float uTime;
 
 varying vec2 vUv;

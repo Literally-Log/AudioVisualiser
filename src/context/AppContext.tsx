@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import type {
   AppContextType,
   AudioState,
@@ -17,6 +17,7 @@ import type {
   VisualizationType,
 } from '../types/index.ts'
 import { useAudioAnalyser } from '../hooks/useAudioAnalyser.ts'
+import { useRecorder } from '../hooks/useRecorder.ts'
 import { defaultEffects, defaultFrequencyTuning, defaultPeakHold, defaultSensitivity, defaultVisualization } from '../utils/presets.ts'
 
 const STORAGE_KEY = 'music-visualizer-settings'
@@ -82,7 +83,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
     transitionProgress: 1,
   })
 
-  const { playback, beat, frameDataRef, loadAudioFile, togglePlay, seek, setVolume } = useAudioAnalyser(settings.sensitivity)
+  const canvasRef = useRef<HTMLCanvasElement | null>(null)
+
+  const { playback, beat, frameDataRef, audioContextRef, gainRef, loadAudioFile, togglePlay, seek, setVolume } = useAudioAnalyser(settings.sensitivity)
+
+  const { recording, startRecording, stopRecording } = useRecorder(canvasRef, audioContextRef, gainRef)
 
   // Map playback to AudioState shape for backward compat with UI components
   const audio: AudioState = useMemo(() => ({
@@ -217,6 +222,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const contextValue = useMemo<AppContextType>(() => ({
     audio,
     frameDataRef,
+    recording,
+    canvasRef,
     visualizer,
     settings,
     customPresets,
@@ -234,11 +241,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
     saveCustomPreset,
     deleteCustomPreset,
     resetSettings,
+    startRecording,
+    stopRecording,
     loadAudioFile,
     togglePlay,
     seek,
     setVolume,
-  }), [audio, frameDataRef, visualizer, settings, customPresets, setVisualizationType, updateColors, updateSensitivity, updateEffects, updatePerformance, updateBehavior, updateVisualization, updateFrequencyTuning, updatePeakHold, loadPreset, loadCustomPreset, saveCustomPreset, deleteCustomPreset, resetSettings, loadAudioFile, togglePlay, seek, setVolume])
+  }), [audio, frameDataRef, recording, canvasRef, visualizer, settings, customPresets, setVisualizationType, updateColors, updateSensitivity, updateEffects, updatePerformance, updateBehavior, updateVisualization, updateFrequencyTuning, updatePeakHold, loadPreset, loadCustomPreset, saveCustomPreset, deleteCustomPreset, resetSettings, startRecording, stopRecording, loadAudioFile, togglePlay, seek, setVolume])
 
   return (
     <AppCtx.Provider value={contextValue}>
