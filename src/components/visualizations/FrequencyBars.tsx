@@ -77,7 +77,7 @@ export default function FrequencyBars() {
       const mat = materials[i]
       const smoothness = tuning.smoothness / 100
       const lerpFactor = 0.1 + (1 - smoothness) * 0.5
-      mat.uniforms.uFrequency.value = THREE.MathUtils.lerp(mat.uniforms.uFrequency.value, val * scale, lerpFactor)
+      mat.uniforms.uFrequency.value = THREE.MathUtils.lerp(mat.uniforms.uFrequency.value, val * scale * 3, lerpFactor)
       mat.uniforms.uTime.value = t
       mat.uniforms.uColor1.value.set(settings.colors.primary)
       mat.uniforms.uColor2.value.set(settings.colors.secondary)
